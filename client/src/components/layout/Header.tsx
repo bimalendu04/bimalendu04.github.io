@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "./ThemeProvider";
 import { Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -45,7 +44,9 @@ export default function Header() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    const newTheme = theme === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", newTheme);
+    setThemeState(newTheme);
   };
 
   useEffect(() => {
