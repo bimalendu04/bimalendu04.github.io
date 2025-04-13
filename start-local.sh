@@ -4,10 +4,5 @@
 
 echo "Starting the portfolio application locally..."
 
-# Set environment variables for local development
-export NODE_ENV=development
-export PORT=3000
-export HOST=localhost
-
-# Start the application
-npx tsx server/index.ts
+# Start the application with cross-env for better compatibility across platforms
+npx cross-env NODE_ENV=development PORT=3000 HOST=localhost tsx server/index.ts

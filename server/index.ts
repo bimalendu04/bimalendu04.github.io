@@ -59,13 +59,24 @@ app.use((req, res, next) => {
   // Get port and host from environment variables or use defaults
   // PORT can be set by environment (like on local machine) or use 5000 by default (for Replit)
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-  const host = process.env.HOST || "0.0.0.0";
   
-  server.listen({
-    port,
-    host,
-    reusePort: true,
-  }, () => {
-    log(`serving on ${host}:${port}`);
-  });
+  // Use localhost for local development to avoid ENOTSUP errors on some systems
+  // Use 0.0.0.0 for Replit or production environments
+  const host = process.env.NODE_ENV === 'production' || process.env.REPL_ID ? '0.0.0.0' : 'localhost';
+  
+  // Handle different listening configurations based on environment
+  if (process.env.NODE_ENV === 'production' || process.env.REPL_ID) {
+    server.listen({
+      port,
+      host,
+      reusePort: true,
+    }, () => {
+      log(`serving on ${host}:${port}`);
+    });
+  } else {
+    // Simpler configuration for local development
+    server.listen(port, host, () => {
+      log(`serving on ${host}:${port}`);
+    });
+  }
 })();

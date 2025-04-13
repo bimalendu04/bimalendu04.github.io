@@ -128,7 +128,7 @@ export default function Hero() {
           </motion.h1>
           
           <motion.h2 
-            className="text-xl sm:text-2xl md:text-3xl mb-6 text-gray-700 dark:text-gray-300 h-8 mx-auto lg:mx-0"
+            className="text-xl sm:text-2xl md:text-3xl mb-12 text-gray-700 dark:text-gray-300 h-8 mx-auto lg:mx-0"
             variants={textVariants}
             initial="hidden"
             animate="visible"
