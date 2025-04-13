@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { Route, Switch } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import Header from "@/components/layout/Header";
@@ -7,52 +8,125 @@ import Footer from "@/components/layout/Footer";
 
 // Animated cursor component
 function CustomCursor() {
-  return (
-    <motion.div
-      className="fixed w-6 h-6 rounded-full pointer-events-none z-50 flex items-center justify-center mix-blend-difference"
-      style={{ 
-        backgroundColor: "white",
-        boxShadow: "0 0 20px 5px rgba(255, 255, 255, 0.3)",
-      }}
-      animate={{
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2,
-        scale: [1, 1.2, 1],
-      }}
-      transition={{
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [cursorVariant, setCursorVariant] = useState("default");
+  
+  // Track if cursor is over a clickable element
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Update mouse position
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    // Check if cursor is over a clickable element
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const isClickable = 
+        target.tagName === 'BUTTON' || 
+        target.tagName === 'A' ||
+        target.closest('button') ||
+        target.closest('a') ||
+        target.getAttribute('role') === 'button' ||
+        window.getComputedStyle(target).cursor === 'pointer';
+      
+      setCursorVariant(isClickable ? "hover" : "default");
+      setIsHovering(isClickable);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseover", handleMouseOver);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseover", handleMouseOver);
+    };
+  }, []);
+
+  // Cursor variants
+  const variants = {
+    default: {
+      x: mousePosition.x - 12,
+      y: mousePosition.y - 12,
+      height: 24,
+      width: 24,
+      backgroundColor: "rgba(255, 255, 255, 0.8)",
+      mixBlendMode: "difference" as "difference",
+      transition: {
         type: "spring",
         damping: 25,
         stiffness: 300,
-        mass: 0.5,
-      }}
-    >
-      <motion.div 
-        className="w-2 h-2 bg-transparent rounded-full border border-white"
-        animate={{ scale: [0.5, 1, 0.5] }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
+        mass: 0.5
+      }
+    },
+    hover: {
+      x: mousePosition.x - 16,
+      y: mousePosition.y - 16,
+      height: 32,
+      width: 32,
+      backgroundColor: "rgba(255, 255, 255, 0.8)",
+      mixBlendMode: "difference" as "difference",
+      transition: {
+        type: "spring",
+        damping: 15,
+        stiffness: 200,
+        mass: 0.6
+      }
+    }
+  };
+  
+  // Hide cursor on mobile/tablet devices
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    // Check if device supports hover (non-touch)
+    const mediaQuery = window.matchMedia("(hover: hover)");
+    setIsVisible(mediaQuery.matches);
+    
+    const handleMediaQueryChange = (e: MediaQueryListEvent) => {
+      setIsVisible(e.matches);
+    };
+    
+    mediaQuery.addEventListener("change", handleMediaQueryChange);
+    return () => mediaQuery.removeEventListener("change", handleMediaQueryChange);
+  }, []);
+  
+  if (!isVisible) return null;
+
+  return (
+    <>
+      <motion.div
+        className="fixed rounded-full pointer-events-none z-50 flex items-center justify-center"
+        variants={variants}
+        animate={cursorVariant}
+        style={{ 
+          boxShadow: isHovering 
+            ? "0 0 25px 8px rgba(255, 255, 255, 0.4)" 
+            : "0 0 20px 5px rgba(255, 255, 255, 0.3)"
         }}
-      />
-    </motion.div>
+      >
+        <motion.div 
+          className="w-2 h-2 bg-transparent rounded-full border border-white"
+          animate={{ 
+            scale: isHovering ? [0.7, 1.3, 0.7] : [0.5, 1, 0.5],
+            opacity: isHovering ? 0.8 : 1
+          }}
+          transition={{ 
+            duration: isHovering ? 1.5 : 2, 
+            repeat: Infinity, 
+            ease: "easeInOut" 
+          }}
+        />
+      </motion.div>
+    </>
   );
 }
 
 function App() {
-  // Controls the animated cursor
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const cursor = document.querySelector('.custom-cursor') as HTMLElement;
-    if (cursor) {
-      cursor.style.left = `${e.clientX}px`;
-      cursor.style.top = `${e.clientY}px`;
-    }
-  };
-
   return (
     <div 
       className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden"
-      onMouseMove={handleMouseMove}
     >
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/5 dark:to-primary/10 pointer-events-none" />
@@ -82,10 +156,8 @@ function App() {
         ))}
       </div>
       
-      {/* Custom cursor - hidden on mobile */}
-      <div className="custom-cursor hidden md:block">
-        <CustomCursor />
-      </div>
+      {/* Custom cursor */}
+      <CustomCursor />
 
       <Header />
       
