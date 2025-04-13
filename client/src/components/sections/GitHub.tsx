@@ -95,14 +95,14 @@ export default function GitHub() {
     }
   ];
 
-  // Use the API for real data or fall back to mock data
+  // Use our backend proxy API to avoid CORS issues
   const { data: userData, isLoading: userLoading, error: userError } = useQuery<GithubUser>({
-    queryKey: [`https://api.github.com/users/${username}`],
+    queryKey: [`/api/github/user/${username}`],
     refetchOnWindowFocus: false,
   });
 
   const { data: reposData, isLoading: reposLoading, error: reposError } = useQuery<GithubRepo[]>({
-    queryKey: [`https://api.github.com/users/${username}/repos?sort=stars&per_page=6`],
+    queryKey: [`/api/github/repos/${username}`],
     refetchOnWindowFocus: false,
   });
 
