@@ -95,15 +95,22 @@ export default function GitHub() {
     }
   ];
 
-  // Use our backend proxy API to avoid CORS issues
+  // Determine if we're in a deployed environment (GitHub Pages)
+  const isGitHubPages = window.location.hostname.includes('github.io');
+
+  // Use direct API for deployed environments and backend proxy for development
   const { data: userData, isLoading: userLoading, error: userError } = useQuery<GithubUser>({
-    queryKey: [`/api/github/user/${username}`],
+    queryKey: [isGitHubPages ? `https://api.github.com/users/${username}` : `/api/github/user/${username}`],
     refetchOnWindowFocus: false,
+    retry: false, // Don't retry on Github API rate limits
+    enabled: !isGitHubPages, // Only run the query in development
   });
 
   const { data: reposData, isLoading: reposLoading, error: reposError } = useQuery<GithubRepo[]>({
-    queryKey: [`/api/github/repos/${username}`],
+    queryKey: [isGitHubPages ? `https://api.github.com/users/${username}/repos?sort=stars&per_page=6` : `/api/github/repos/${username}`],
     refetchOnWindowFocus: false,
+    retry: false, // Don't retry on Github API rate limits
+    enabled: !isGitHubPages, // Only run the query in development
   });
 
   // Function to get color for language
